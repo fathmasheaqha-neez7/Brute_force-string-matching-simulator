@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute Force String Matching Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #00d9ff;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --match: #6366f1;
+            --text-light: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text-light);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--accent), #00a8cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+
+        .card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.2);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #00a8cc);
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(148, 163, 184, 0.3);
+            border-color: var(--accent);
+        }
+
+        .visualization {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Space Mono', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        .text-row, .pattern-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        .char {
+            width: 45px;
+            height: 45px;
+            min-width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: rgba(30, 41, 59, 0.4);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .char.compared {
+            background: rgba(249, 158, 11, 0.3);
+            border-color: var(--warning);
+        }
+
+        .char.matched {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: var(--success);
+        }
+
+        .char.current {
+            background: rgba(99, 102, 241, 0.4);
+            border-color: var(--match);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+        }
+
+        .char.mismatch {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: var(--danger);
+        }
+
+        .position-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-right: 8px;
+            min-width: 50px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .complexity-section {
+            margin-top: 30px;
+        }
+
+        .complexity-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .complexity-table th, .complexity-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid var(--border);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .complexity-table th {
+            background: rgba(0, 217, 255, 0.1);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .complexity-table td {
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        .test-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .test-case {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .test-case:hover {
+            border-color: var(--accent);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .test-case.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+        }
+
+        .test-case h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .test-case p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .result-box {
+            background: rgba(30, 41, 59, 0.6);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result-box.success {
+            border-left-color: var(--success);
+        }
+
+        .result-box.warning {
+            border-left-color: var(--warning);
+        }
+
+        .result-box.danger {
+            border-left-color: var(--danger);
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .result-content {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .step-info {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 2px solid var(--match);
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--border);
+            color: var(--text-light);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent), #00a8cc);
+            color: var(--primary);
+            border-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        .code-block {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            overflow-x: auto;
+            margin-top: 15px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            white-space: pre-line;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .test-cases {
+                grid-template-columns: 1fr;
+            }
+
+            .char {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 BRUTE FORCE STRING MATCHING</h1>
+            <p class="subtitle">Interactive Algorithm Simulator</p>
+        </header>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab(event, 'simulator')">Simulator</button>
+            <button class="tab-btn" onclick="switchTab(event, 'complexity')">Complexity</button>
+            <button class="tab-btn" onclick="switchTab(event, 'testcases')">Test Cases</button>
+            <button class="tab-btn" onclick="switchTab(event, 'algorithm')">Algorithm</button>        
+        </div>
+
+        <!-- SIMULATOR TAB -->
+        <div id="simulator" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <h2>Input Configuration</h2>
+                    
+                    <div class="input-group">
+                        <label for="text">Text (Haystack)</label>
+                        <input type="text" id="text" placeholder="Enter text to search in..." value="ABABDABACDABABCABAB">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="pattern">Pattern (Needle)</label>
+                        <input type="text" id="pattern" placeholder="Enter pattern to find..." value="ABABCAB">
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="startSimulation()">Start Simulation</button>
+                        <button class="btn-secondary" onclick="resetSimulation()">Reset</button>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="textLength">0</div>
+                            <div class="stat-label">Text Length</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="patternLength">0</div>
+                            <div class="stat-label">Pattern Length</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="comparisons">0</div>
+                            <div class="stat-label">Comparisons</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="matchCount">0</div>
+                            <div class="stat-label">Matches Found</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Visualization</h2>
+                    <div class="visualization" id="visualization">
+                        <p style="color: var(--text-muted); text-align: center; padding: 20px;">Enter text and pattern, then click "Start Simulation"</p>
+                    </div>
+                    <div class="step-indicator">
+                        <span id="stepInfo">Step: 0/0</span>
+                        <button class="btn-secondary" onclick="prevStep()" style="flex: 0; padding: 8px 16px;">← Prev</button>
+                        <button class="btn-secondary" onclick="nextStep()" style="flex: 0; padding: 8px 16px;">Next →</button>
+                        <button class="btn-secondary" onclick="autoPlay()" style="flex: 0; padding: 8px 16px;" id="autoPlayBtn">Auto ▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Results & Analysis</h2>
+                <div id="resultBox" class="result-box" style="display: none;"></div>
+                <div id="stepDescription" class="step-info" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- COMPLEXITY TAB -->
+        <div id="complexity" class="tab-content">
+            <div class="card scroll-container">
+                <h2>Time Complexity Analysis</h2>
+                
+                <table class="complexity-table">
+                    <thead>
+                        <tr>
+                            <th>Case</th>
+                            <th>Complexity</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Best Case</strong></td>
+                            <td><code>O(n)</code></td>
+                            <td>Pattern found at the beginning of text on first character comparison</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average Case</strong></td>
+                            <td><code>O(n·m)</code></td>
+                            <td>Pattern is found somewhere in the middle after some iterations</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Worst Case</strong></td>
+                            <td><code>O(n·m)</code></td>
+                            <td>Pattern not found or found at the end; all comparisons performed</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 30px; color: var(--accent);">Where:</h3>
+                <ul style="margin-left: 20px; color: var(--text-muted); line-height: 2;">
+                    <li><strong>n</strong> = Length of the text</li>
+                    <li><strong>m</strong> = Length of the pattern</li>
+                </ul>
+
+                <h3 style="margin-top: 30px; color: var(--accent);">Space Complexity:</h3>
+                <p style="color: var(--text-muted);"><strong>O(1)</strong> - Only requires constant extra space for variables</p>
+
+                <h3 style="margin-top: 30px; color: var(--accent);">Algorithm Characteristics:</h3>
+                <ul style="margin-left: 20px; color: var(--text-muted); line-height: 2;">
+                    <li>✓ Simplest string matching algorithm</li>
+                    <li>✓ No preprocessing required</li>
+                    <li>✓ Works well for small patterns and texts</li>
+                    <li>✗ Inefficient for large texts and patterns</li>
+                    <li>✗ Performs many redundant comparisons</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- TEST CASES TAB -->
+        <div id="testcases" class="tab-content">
+            <h2 style="margin-bottom: 20px; color: var(--accent);">Predefined Test Cases</h2>
+            
+            <div class="test-cases">
+                <div class="test-case" onclick="loadTestCase(0)">
+                    <h3>1. Best Case</h3>
+                    <p><strong>Text:</strong> "ABCDEF"</p>
+                    <p><strong>Pattern:</strong> "ABC"</p>
+                    <p><strong>Expected:</strong> Match at position 0 (O(m) comparisons)</p>
+                </div>
+
+                <div class="test-case" onclick="loadTestCase(1)">
+                    <h3>2. No Match</h3>
+                    <p><strong>Text:</strong> "AAAA"</p>
+                    <p><strong>Pattern:</strong> "BBBBB"</p>
+                    <p><strong>Expected:</strong> No match found (O(n·m) comparisons)</p>
+                </div>
+
+                <div class="test-case" onclick="loadTestCase(2)">
+                    <h3>3. Match at End</h3>
+                    <p><strong>Text:</strong> "XYZZZZZZZZABC"</p>
+                    <p><strong>Pattern:</strong> "ABC"</p>
+                    <p><strong>Expected:</strong> Match at position 10 (worst case)</p>
+                </div>
+
+                <div class="test-case" onclick="loadTestCase(3)">
+                    <h3>4. Multiple Matches</h3>
+                    <p><strong>Text:</strong> "AAAAAAA"</p>
+                    <p><strong>Pattern:</strong> "AA"</p>
+                    <p><strong>Expected:</strong> 6 overlapping matches</p>
+                </div>
+
+                <div class="test-case" onclick="loadTestCase(4)">
+                    <h3>5. Boundary: Single Char</h3>
+                    <p><strong>Text:</strong> "ABCDEFG"</p>
+                    <p><strong>Pattern:</strong> "E"</p>
+                    <p><strong>Expected:</strong> Match at position 4</p>
+                </div>
+
+                <div class="test-case" onclick="loadTestCase(5)">
+                    <h3>6. Boundary: Pattern = Text</h3>
+                    <p><strong>Text:</strong> "PATTERN"</p>
+                    <p><strong>Pattern:</strong> "PATTERN"</p>
+                    <p><strong>Expected:</strong> Full match at position 0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALGORITHM TAB -->
+        <div id="algorithm" class="tab-content ">
+            <div class="card">
+                <h2>Algorithm Implementation</h2>
+                
+                <h3 style="margin-top: 20px; color: var(--accent); margin-bottom: 10px;">Pseudocode:</h3>
+                <div class="code-block">
+function bruteForceMatcher(T, P):
+    n = length(T)
+    m = length(P)
+    
+    for i = 0 to n-m:
+        match = true
+        
+        for j = 0 to m-1:
+            if T[i+j] ≠ P[j]:
+                match = false
+                break
+        
+        if match:
+            return position i
+    
+    return NOT_FOUND
+                </div>
+
+                <h3 style="margin-top: 30px; color: var(--accent); margin-bottom: 10px;">How It Works:</h3>
+                <ul style="margin-left: 20px; color: var(--text-muted); line-height: 2; margin-bottom: 20px;">
+                    <li><strong>1.</strong> Start from the first position in the text</li>
+                    <li><strong>2.</strong> Compare each character of the pattern with the text</li>
+                    <li><strong>3.</strong> If all characters match, pattern found at current position</li>
+                    <li><strong>4.</strong> If any character doesn't match, move to next position in text</li>
+                    <li><strong>5.</strong> Repeat until pattern is found or end of text is reached</li>
+                </ul>
+
+                <h3 style="color: var(--accent); margin-bottom: 10px;">Advantages:</h3>
+                <ul style="margin-left: 20px; color: var(--text-muted); line-height: 1.8; margin-bottom: 20px;">
+                    <li>✓ Easy to understand and implement</li>
+                    <li>✓ No preprocessing required</li>
+                    <li>✓ Works with any alphabet</li>
+                    <li>✓ Suitable for small datasets</li>
+                </ul>
+
+                <h3 style="color: var(--accent); margin-bottom: 10px;">Disadvantages:</h3>
+                <ul style="margin-left: 20px; color: var(--text-muted); line-height: 1.8;">
+                    <li>✗ O(n·m) time complexity in average and worst cases</li>
+                    <li>✗ Inefficient for large texts and patterns</li>
+                    <li>✗ Many redundant character comparisons</li>
+                    <li>✗ Better algorithms exist (KMP, Boyer-Moore, etc.)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const testCases = [
+            { text: "ABCDEF", pattern: "ABC", desc: "Best Case - Pattern at start" },
+            { text: "AAAA", pattern: "BBBBB", desc: "No Match - Pattern not found" },
+            { text: "XYZZZZZZZZABC", pattern: "ABC", desc: "Worst Case - Pattern at end" },
+            { text: "AAAAAAA", pattern: "AA", desc: "Multiple Matches" },
+            { text: "ABCDEFG", pattern: "E", desc: "Boundary - Single character" },
+            { text: "PATTERN", pattern: "PATTERN", desc: "Boundary - Pattern equals text" }
+        ];
+
+        let currentStep = 0;
+        let totalSteps = 0;
+        let steps = [];
+        let autoPlayInterval = null;
+        let isAutoPlaying = false;
+
+        function bruteForceMatch(text, pattern) {
+            const steps = [];
+            const n = text.length;
+            const m = pattern.length;
+            let comparisons = 0;
+            const matches = [];
+
+            for (let i = 0; i <= n - m; i++) {
+                const stepData = {
+                    textPosition: i,
+                    patternMatches: [],
+                    comparisons: 0,
+                    matched: false,
+                    message: `Trying position ${i}`
+                };
+
+                let matched = true;
+                for (let j = 0; j < m; j++) {
+                    comparisons++;
+                    stepData.comparisons++;
+                    
+                    if (text[i + j] === pattern[j]) {
+                        stepData.patternMatches.push({ patternIdx: j, status: 'match' });
+                    } else {
+                        stepData.patternMatches.push({ patternIdx: j, status: 'mismatch' });
+                        matched = false;
+                        stepData.message =`Mismatch: Text[${i+j}] = '${text[i+j]}' and Pattern[${j}] = '${pattern[j]}'`;
+                        break;
+                    }
+                }
+
+                if (matched) {
+                    stepData.matched = true;
+                    stepData.message = `✓ Pattern found at position ${i}!`;
+                    matches.push(i);
+                }
+
+                steps.push(stepData);
+            }
+
+            return { steps, matches, totalComparisons: comparisons };
+        }
+
+        function visualizeStep(step, text, pattern) {
+
+    let html = '<div style="margin-bottom: 20px;">';
+
+    // =========================
+    // TEXT VISUALIZATION
+    // =========================
+
+    html += '<div style="margin-bottom: 12px;">';
+
+    html += `
+    <p style="
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-size: 0.85rem;
+    ">
+        TEXT
+    </p>
+    `;
+
+    // Position numbers
+    html += '<div class="text-row" style="margin-bottom:4px;">';
+
+    for (let i = 0; i < text.length; i++) {
+
+    html += `
+        <div class="char"
+        style="
+            height:22px;
+            min-width:45px;
+            font-size:0.7rem;
+            background:transparent;
+            border:none;
+            color:var(--text-muted);
+        ">
+            ${i}
+        </div>
+    `;
+}
+
+    html += '</div>';
+
+    // Actual text characters
+    html += '<div class="text-row">';
+
+    for (let i = 0; i < text.length; i++) {
+
+        const isInWindow =
+            i >= step.textPosition &&
+            i < step.textPosition + pattern.length;
+
+        const charClass = isInWindow
+            ? 'current'
+            : '';
+
+        html += `
+            <div class="char ${charClass}">
+                ${text[i]}
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    html += '</div>';
+
+    // =========================
+    // PATTERN VISUALIZATION
+    // =========================
+
+    html += '<div style="margin-top: 10px;">';
+
+    html += `
+    <p style="
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-size: 0.85rem;
+    ">
+        PATTERN
+    </p>
+    `;
+
+    html += `
+<div
+class="pattern-row"
+>
+`;
+    for (let s = 0; s < step.textPosition; s++) {
+
+    html += `
+        <div class="char"
+        style="visibility:hidden;">
+        </div>
+    `;
+}
+    // Pattern characters
+    for (let j = 0; j < pattern.length; j++) {
+
+        const match = step.patternMatches.find(
+            m => m.patternIdx === j
+        );
+
+        let charClass = '';
+
+        if (match) {
+
+            charClass =
+                match.status === 'match'
+                ? 'matched'
+                : 'mismatch';
+        }
+
+        html += `
+            <div class="char ${charClass}">
+                ${pattern[j]}
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    return html;
+}
+      
+
+        function startSimulation() {
+            const text = document.getElementById('text').value.toUpperCase();
+            const pattern = document.getElementById('pattern').value.toUpperCase();
+
+            if (!text || !pattern) {
+                alert('Please enter both text and pattern');
+                return;
+            }
+
+            if (pattern.length > text.length) {
+                alert('Pattern length cannot be greater than text length');
+                return;
+            }
+
+            // Update stats
+            document.getElementById('textLength').textContent = text.length;
+            document.getElementById('patternLength').textContent = pattern.length;
+
+            const result = bruteForceMatch(text, pattern);
+            steps = result.steps;
+            totalSteps = result.steps.length;
+            currentStep = 0;
+
+            document.getElementById('comparisons').textContent = result.totalComparisons;
+            document.getElementById('matchCount').textContent = result.matches.length;
+
+            showStep(text, pattern);
+        }
+
+        function showStep(text, pattern) {
+            const visualization = document.getElementById('visualization');
+            const step = steps[currentStep];
+
+            // Update visualization
+            visualization.innerHTML = visualizeStep(step, text, pattern);
+
+            // Update step info
+            document.getElementById('stepInfo').textContent = `Step: ${currentStep + 1}/${totalSteps}`;
+
+            // Update description
+            const desc = document.getElementById('stepDescription');
+            desc.style.display = 'block';
+            desc.innerHTML = step.message;
+            if (step.matched) {
+                desc.style.borderLeftColor = 'var(--success)';
+                desc.style.background = 'rgba(16, 185, 129, 0.1)';
+            } else {
+                desc.style.borderLeftColor = 'var(--warning)';
+                desc.style.background = 'rgba(249, 158, 11, 0.1)';
+            }
+
+            // Update result box
+            const resultBox = document.getElementById('resultBox');
+            if (currentStep === totalSteps - 1) {
+                showFinalResult(text, pattern);
+            } else {
+                resultBox.style.display = 'none';
+            }
+        }
+
+        function showFinalResult(text, pattern) {
+            const result = bruteForceMatch(text, pattern);
+            const resultBox = document.getElementById('resultBox');
+            resultBox.style.display = 'block';
+
+            let html = '<div class="result-title">Simulation Complete</div>';
+            html += '<div class="result-content">';
+            
+            if (result.matches.length > 0) {
+                resultBox.classList.remove('warning', 'danger');
+                resultBox.classList.add('success');
+                html += `✓ Found ${result.matches.length} match(es) at position(s): ${result.matches.join(', ')}<br>`;
+            } else {
+                resultBox.classList.remove('warning', 'success');
+                resultBox.classList.add('danger');
+                html += `✗ Pattern not found in text<br>`;
+            }
+            
+            html += `Total comparisons: ${result.totalComparisons}<br>`;
+            html += `Text length (n): ${text.length}<br>`;
+            html += `Pattern length (m): ${pattern.length}`;
+            html += '</div>';
+
+            resultBox.innerHTML = html;
+        }
+
+        function nextStep() {
+            const text = document.getElementById('text').value.toUpperCase();
+            const pattern = document.getElementById('pattern').value.toUpperCase();
+
+            if (steps.length === 0) {
+                alert('Start simulation first');
+                return;
+            }
+
+            if (currentStep < totalSteps - 1) {
+                currentStep++;
+                showStep(text, pattern);
+            }
+        }
+
+        function prevStep() {
+            const text = document.getElementById('text').value.toUpperCase();
+            const pattern = document.getElementById('pattern').value.toUpperCase();
+
+            if (steps.length === 0) {
+                alert('Start simulation first');
+                return;
+            }
+
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(text, pattern);
+            }
+        }
+
+        function autoPlay() {
+            if (steps.length === 0) {
+                alert('Start simulation first');
+                return;
+            }
+
+            const btn = document.getElementById('autoPlayBtn');
+            if (isAutoPlaying) {
+                clearInterval(autoPlayInterval);
+                isAutoPlaying = false;
+                btn.textContent = 'Auto ▶';
+            } else {
+                isAutoPlaying = true;
+                btn.textContent = 'Pause ⏸';
+                autoPlayInterval = setInterval(() => {
+                    if (currentStep >= totalSteps - 1) {
+                        clearInterval(autoPlayInterval);
+                        isAutoPlaying = false;
+                        btn.textContent = 'Auto ▶';
+                    } else {
+                        nextStep();
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetSimulation() {
+            clearInterval(autoPlayInterval);
+            autoPlayInterval = null;
+            isAutoPlaying = false;
+            currentStep = 0;
+            totalSteps = 0;
+            steps = [];
+            if (autoPlayInterval) clearInterval(autoPlayInterval);
+            isAutoPlaying = false;
+            document.getElementById('autoPlayBtn').textContent = 'Auto ▶';
+            
+            document.getElementById('visualization').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">Enter text and pattern, then click "Start Simulation"</p>';
+            document.getElementById('resultBox').style.display = 'none';
+            document.getElementById('stepDescription').style.display = 'none';
+            document.getElementById('stepInfo').textContent = 'Step: 0/0';
+            document.getElementById('comparisons').textContent = '0';
+            document.getElementById('matchCount').textContent = '0';
+        }
+
+        function loadTestCase(index) {
+            const tc = testCases[index];
+            document.getElementById('text').value = tc.text;
+            document.getElementById('pattern').value = tc.pattern;
+            
+            // Remove active class from all test cases
+            document.querySelectorAll('.test-case').forEach(el => el.classList.remove('active'));
+            event.target.closest('.test-case').classList.add('active');
+            
+            startSimulation();
+        }
+
+function switchTab(event, tabName) {
+
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Remove active style from buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    document.getElementById(tabName).classList.add('active');
+
+    // Highlight clicked button
+    event.currentTarget.classList.add('active');
+}
+
+        // Initialize with example
+        window.addEventListener('load', () => {
+            document.getElementById('text').value = 'ABABDABACDABABCABAB';
+            document.getElementById('pattern').value = 'ABABCAB';
+            document.getElementById('textLength').textContent = '19';
+            document.getElementById('patternLength').textContent = '7';
+        });
+    </script>
+</body>
+</html>
